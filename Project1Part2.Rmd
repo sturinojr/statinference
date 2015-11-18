@@ -1,0 +1,104 @@
+---
+title: 'Statistical Inference: Project 1 Part 2'
+author: "JR Sturino"
+date: "November 17, 2015"
+output: word_document
+---
+
+##Overview
+Using the ToothGrow data set perform basic data analysis, summarize the data, use condifence intervals to compare tooth growth by supplement and and dose, and give a conclusion about the data in general.
+
+##Initial Analysis of Data
+```{r message=FALSE}
+library(datasets)
+library(ggplot2)
+library(dplyr)
+
+toothData <- ToothGrowth
+head(toothData)
+```
+
+Look at the general summary of the data
+```{r}
+summary(toothData)
+```
+Note that there are only two supplements in this data set, OJ and VC.
+
+Lets quickly examine the data inside of the dataset by looking at the distribution across supplments of tooth length and dosage:
+
+```{r}
+ggplot(toothData, aes(x=as.factor(dose), y=len, color=as.factor(dose))) + 
+  geom_boxplot() + xlab("Supplement") + ylab("Tooth Length") +  facet_grid(.~supp)
+```
+
+##Summary
+As we look further into the data, we can see that tooth length is greater for OJ than VC in the dosages of 0.5 and 1.0, but as the dosage reaches 2.0 tooth length looks very similar for the two supplements.
+
+```{r}
+#only use the complete cases of the data
+isValidData <- complete.cases(toothData)
+toothData <- toothData[isValidData,]
+head(toothData)
+toothInfo <- group_by(toothData, dose, supp) %>%
+  summarize(toothTotal = sum(len), toothMean = mean(len)) 
+
+ggplot(toothInfo, aes(x=as.factor(dose), y=toothMean, group=supp, fill=supp)) +
+  geom_bar(stat="identity") +xlab("Dosage") + ylab("Average Tooth Length") + 
+  ggtitle("Tooth Length by Dosage and Supplement Type") +
+  facet_wrap(~supp, ncol=1) +
+  guides(fill=guide_legend(title="Supplement"))
+```
+
+##Confidence intervals
+
+###0.5mg Dosage Test
+```{r}
+dose.5 <- t.test(len ~ supp, var.equal=T, data=toothData[toothData$dose==.5,])
+ci.5 <-dose.5$conf[1:2]
+pv.5 <- dose.5$p.value
+```
+####The Confidence Interval of the 0.5mg Dosage
+```{r echo=FALSE}
+ci.5
+```
+####The pvalue of the 0.5mg Dosage
+```{r echo=FALSE}
+pv.5
+```
+
+###1mg Dosage Test
+```{r}
+dose1 <- t.test(len ~ supp, var.equal=T, data=toothData[toothData$dose==1,])
+ci1 <- dose1$conf[1:2]
+pv1 <- dose1$p.value
+```
+####The Confidence Interval of the 1mg Dosage
+```{r echo=FALSE}
+ci1
+```
+####The pvalue of the 1mg Dosage
+```{r echo=FALSE}
+pv1
+```
+
+###2mg Dosage Test
+```{r}
+dose2 <- t.test(len ~ supp, var.equal=T, data=toothData[toothData$dose==2,])
+ci2 <- dose2$conf[1:2]
+pv2 <- dose2$p.value
+```
+####The Confidence Interval of the 2mg Dosage
+```{r echo=FALSE}
+ci2
+```
+####The pvalue of the 2mg Dosage
+```{r echo=FALSE}
+pv2
+```
+
+##Conclusion
+After looking at the data provided multiple conclusions can be drawn.
+
+1. The difference of tooth growth when using the supplement OJ over the supplement VC is much greater when the dosage ranger are .5 and 1.0.
+2. When the 2mg dosage is used the effect of tooth growth is nearly the same when using the supplements OJ and VC.
+
